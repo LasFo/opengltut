@@ -6,6 +6,7 @@ cc_binary(
         "//third_party/glad:glad",
         "//third_party/stb:stb_img",
         "@glfw//:glfw",
+        "@glm//:glm",
     ],
     data = [
         "shader.vert",
