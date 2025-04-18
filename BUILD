@@ -4,11 +4,14 @@ cc_binary(
     deps = [
         ":shader",
         "//third_party/glad:glad",
+        "//third_party/stb:stb_img",
         "@glfw//:glfw",
     ],
     data = [
         "shader.vert",
-        "shader.frag"
+        "shader.frag",
+        "container.jpg",
+        "awesomeface.png",
     ],
 )
 
