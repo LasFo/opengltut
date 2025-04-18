@@ -19,5 +19,8 @@ cc_binary(
 cc_library(
     name = 'shader',
     hdrs = ['shader.h'],
-    deps = ["//third_party/glad:glad"],
+    deps = [
+        "//third_party/glad:glad",
+        "@glm//:glm",
+    ],
 )
