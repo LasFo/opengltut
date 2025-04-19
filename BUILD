@@ -12,6 +12,8 @@ cc_binary(
     data = [
         "shader.vert",
         "shader.frag",
+        "shader_light.vert",
+        "shader_light.frag",
         "container.jpg",
         "awesomeface.png",
     ],
