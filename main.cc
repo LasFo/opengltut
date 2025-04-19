@@ -29,6 +29,8 @@ float lastFrame = 0.0f;
 float ambientStrength = 0.1f;
 float diffuseStrength = 1.0f;
 
+bool stopLight = false;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
 }
@@ -68,6 +70,12 @@ void processInput(GLFWwindow *window) {
   }
   if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
     diffuseStrength -= 0.01f;
+  }
+  if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+    stopLight = false;
+  }
+  if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+    stopLight = true;
   }
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -181,6 +189,7 @@ int main() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
+  glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
   while (!glfwWindowShouldClose(window)) {
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
@@ -190,10 +199,11 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float time = glfwGetTime();
-    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-//    lightPos.x = lightPos.x * sin(time);
-//    lightPos.y = lightPos.y * cos(time);
-//    lightPos.z = lightPos.z * cos(time);
+    if (!stopLight) {
+        lightPos.x = 1.2f * sin(time);
+        lightPos.y = 1.0f * cos(time);
+        lightPos.z = 2.0f * cos(time);
+    }
 
     lightingShader.use();
     lightingShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
@@ -202,7 +212,6 @@ int main() {
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 model = glm::mat4(1.0);
-
 
     lightingShader.setMat4("projection", projection);
     lightingShader.setMat4("view", view);
