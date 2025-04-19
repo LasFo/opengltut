@@ -1,23 +1,67 @@
 #include <iostream>
+#include <thread>
 
 #include <glad/glad.h>
 // GLFW needs to be imported after glad
 #include <GLFW/glfw3.h>
 
+#include "camera.h"
 #include "shader.h"
 #include "third_party/stb/stb_img.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+// timing
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow *window, double xposIn, double yposIn) {
+  float xpos = static_cast<float>(xposIn);
+  float ypos = static_cast<float>(yposIn);
+  if (firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = false;
+    return;
+  }
+  float xoffset = xpos - lastX;
+  float yoffset = lastY - ypos;
+  camera.ProcessMouseMovement(xoffset, yoffset);
+  lastX = xpos;
+  lastY = ypos;
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    camera.ProcessKeyboard(FORWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    camera.ProcessKeyboard(LEFT, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
 int main() {
@@ -155,12 +199,6 @@ int main() {
   glUniform1i(glGetUniformLocation(defaultShader.ID, "texture0"), 0);
   defaultShader.setInt("texture1", 1);
 
-  glm::mat4 view = glm::mat4(1.0f);
-  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -6.0f));
-
-  glm::mat4 projection;
-  projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
   glEnable(GL_DEPTH_TEST);
 
   glm::vec3 cubePositions[] = {
@@ -175,17 +213,18 @@ int main() {
       glm::vec3(1.5f, 0.2f, -1.5f),
       glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  float mixer = 0.2f;
-  while (!glfwWindowShouldClose(window)) {
-    processInput(window);
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-      mixer += 0.01f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-      mixer -= 0.01f;
-    }
-    mixer = std::clamp(mixer, 0.0f, 1.0f);
+  glm::mat4 view;
+  glm::mat4 projection;
 
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
+
+  while (!glfwWindowShouldClose(window)) {
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    processInput(window);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -194,26 +233,27 @@ int main() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     defaultShader.use();
-    defaultShader.setFloat("mixer", mixer);
     glBindVertexArray(VAO);
 
+    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    defaultShader.setMat4("projection", projection);
 
-    int viewLoc = glGetUniformLocation(defaultShader.ID, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    int projectionLoc = glGetUniformLocation(defaultShader.ID, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    view = camera.GetViewMatrix();
+    defaultShader.setMat4("view", view);
 
-    for(int i = 0; i < sizeof(cubePositions)/sizeof(glm::vec3); i++) {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, cubePositions[i]);
-        float rot = 1.0f;
-        if (i%3 == 0)
-            rot = (float)glfwGetTime();
-        model = glm::rotate(model, glm::radians(20.0f*i*rot), glm::vec3(1.0f, 0.3f, 0.5f));
-        defaultShader.setMat4("model", model);
+    for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
+      glm::mat4 model = glm::mat4(1.0f);
+      model = glm::translate(model, cubePositions[i]);
+      float rot = 1.0f;
+      if (i % 3 == 0)
+        rot = (float)glfwGetTime();
+      model = glm::rotate(model, glm::radians(20.0f * i * rot), glm::vec3(1.0f, 0.3f, 0.5f));
+      defaultShader.setMat4("model", model);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
     }
+
+//    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     glfwSwapBuffers(window);
     glfwPollEvents();

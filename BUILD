@@ -3,6 +3,7 @@ cc_binary(
     srcs = ['main.cc'],
     deps = [
         ":shader",
+        ":camera",
         "//third_party/glad:glad",
         "//third_party/stb:stb_img",
         "@glfw//:glfw",
@@ -19,6 +20,15 @@ cc_binary(
 cc_library(
     name = 'shader',
     hdrs = ['shader.h'],
+    deps = [
+        "//third_party/glad:glad",
+        "@glm//:glm",
+    ],
+)
+
+cc_library(
+    name = 'camera',
+    hdrs = ['camera.h'],
     deps = [
         "//third_party/glad:glad",
         "@glm//:glm",
