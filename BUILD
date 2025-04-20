@@ -14,8 +14,9 @@ cc_binary(
         "shader.frag",
         "shader_light.vert",
         "shader_light.frag",
-        "container.jpg",
-        "awesomeface.png",
+        "container2.png",
+        "container2_specular.png",
+        "matrix.jpg",
     ],
 )
 
