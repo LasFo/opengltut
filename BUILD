@@ -4,6 +4,7 @@ cc_binary(
     deps = [
         ":shader",
         ":camera",
+        ":model",
         "//third_party/glad:glad",
         "//third_party/stb:stb_img",
         "@glfw//:glfw",
@@ -17,7 +18,8 @@ cc_binary(
         "container2.png",
         "container2_specular.png",
         "matrix.jpg",
-    ],
+    ] + glob(['models/*']),
+    linkopts = ["-lassimp"],
 )
 
 cc_library(
@@ -34,6 +36,27 @@ cc_library(
     hdrs = ['camera.h'],
     deps = [
         "//third_party/glad:glad",
+        "@glm//:glm",
+    ],
+)
+
+cc_library(
+    name = 'mesh',
+    hdrs = ['mesh.h'],
+    deps = [
+        ":shader",
+        "@glm//:glm",
+    ],
+)
+
+cc_library(
+    name = 'model',
+    hdrs = ['model.h'],
+    srcs = ['model.cc'],
+    deps = [
+        ":shader",
+        ":mesh",
+        "//third_party/stb:stb_img",
         "@glm//:glm",
     ],
 )
