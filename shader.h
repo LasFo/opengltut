@@ -23,12 +23,12 @@ public:
     std::string fragmentCode;
     std::ifstream vShaderFile(vertexPath);
     if (!vShaderFile.good()) {
-      printf("vertex shader file '%s' does not exist\n", vertexPath);
+      fprintf(stderr, "vertex shader file '%s' does not exist\n", vertexPath);
       return;
     }
     std::ifstream fShaderFile(fragmentPath);
     if (!fShaderFile.good()) {
-      printf("fragment shader file '%s' does not exist\n", fragmentPath);
+      fprintf(stderr, "fragment shader file '%s' does not exist\n", fragmentPath);
       return;
     }
     // ensure ifstream objects can throw exceptions:

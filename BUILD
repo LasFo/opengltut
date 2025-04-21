@@ -11,14 +11,14 @@ cc_binary(
         "@glm//:glm",
     ],
     data = [
-        "shader.vert",
-        "shader.frag",
+        "shader.vs",
+        "shader.fs",
         "shader_light.vert",
         "shader_light.frag",
         "container2.png",
         "container2_specular.png",
         "matrix.jpg",
-    ] + glob(['models/*']),
+    ] + glob(['resources/**']),
     linkopts = ["-lassimp"],
 )
 
