@@ -13,8 +13,8 @@ cc_binary(
     data = [
         "shader.vs",
         "shader.fs",
-        "shader_light.vert",
-        "shader_light.frag",
+        "shaderSingleColor.frag",
+        "stencil.vert",
         "container2.png",
         "container2_specular.png",
         "matrix.jpg",
