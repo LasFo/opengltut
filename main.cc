@@ -2,6 +2,7 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <map>
 // #include <thread>
 
 #include <glad/glad.h>
@@ -91,7 +92,7 @@ void processInput(GLFWwindow *window) {
     camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
-unsigned int loadTexture(char const *path) {
+unsigned int loadTexture(char const *path, GLint mode) {
   unsigned int textureID;
   glGenTextures(1, &textureID);
 
@@ -110,8 +111,8 @@ unsigned int loadTexture(char const *path) {
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -158,10 +159,8 @@ int main() {
   // configure global opengl state
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glEnable(GL_STENCIL_TEST);
-  glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-  glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   // build and compile shaders
   // -------------------------
@@ -246,16 +245,35 @@ int main() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
+  // vegetation VAO
+  unsigned int vegetationVAO, vegetationVBO;
+  glGenVertexArrays(1, &vegetationVAO);
+  glGenBuffers(1, &vegetationVBO);
+  glBindVertexArray(vegetationVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+  glBindVertexArray(0);
 
   // load textures
   // -------------
-  unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg");
-  unsigned int floorTexture = loadTexture("resources/textures/metal.png");
-
+  stbi_set_flip_vertically_on_load(true);
+  unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg", GL_REPEAT);
+  unsigned int floorTexture = loadTexture("resources/textures/metal.png", GL_REPEAT);
+  unsigned int vegetationTexture = loadTexture("resources/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
   // shader configuration
   // --------------------
   shader.use();
   shader.setInt("texture1", 0);
+
+  std::vector<glm::vec3> windows;
+  windows.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+  windows.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+  windows.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+  windows.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+  windows.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
   // render loop
   // -----------
@@ -273,7 +291,7 @@ int main() {
     // render
     // ------
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // don't forget to clear the stencil buffer!
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // don't forget to clear the stencil buffer!
 
     // set uniforms
     shaderSingleColor.use();
@@ -287,9 +305,6 @@ int main() {
     shader.setMat4("view", view);
     shader.setMat4("projection", projection);
 
-    // draw floor as normal, but don't write the floor to the stencil buffer, we only care about the containers. We set its mask to 0x00 to not write to the stencil buffer.
-    glStencilMask(0x00);
-    // floor
     glBindVertexArray(planeVAO);
     glBindTexture(GL_TEXTURE_2D, floorTexture);
     shader.setMat4("model", glm::mat4(1.0f));
@@ -298,8 +313,6 @@ int main() {
 
     // 1st. render pass, draw objects as normal, writing to the stencil buffer
     // --------------------------------------------------------------------
-    glStencilFunc(GL_ALWAYS, 1, 0xFF);
-    glStencilMask(0xFF);
     // cubes
     glBindVertexArray(cubeVAO);
     glActiveTexture(GL_TEXTURE0);
@@ -312,32 +325,19 @@ int main() {
     shader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    // 2nd. render pass: now draw slightly scaled versions of the objects, this time disabling stencil writing.
-    // Because the stencil buffer is now filled with several 1s. The parts of the buffer that are 1 are not drawn, thus only drawing
-    // the objects' size differences, making it look like borders.
-    // -----------------------------------------------------------------------------------------------------------------------------
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
-    shaderSingleColor.use();
-    float scale = 1.1f;
-    // cubes
-    glBindVertexArray(cubeVAO);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    model = glm::scale(model, glm::vec3(scale, scale, scale));
-    shaderSingleColor.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(scale, scale, scale));
-    shaderSingleColor.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-    glStencilMask(0xFF);
-    glStencilFunc(GL_ALWAYS, 0, 0xFF);
-    glEnable(GL_DEPTH_TEST);
+    std::map<float, glm::vec3, std::greater<>> sorted;
+    for (unsigned int i = 0; i < windows.size(); i++) {
+      float distance = glm::length(camera.Position - windows[i]);
+      sorted[distance] = windows[i];
+    }
+    glBindVertexArray(vegetationVAO);
+    glBindTexture(GL_TEXTURE_2D, vegetationTexture);
+    for (auto& [_, w] : sorted) {
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, w);
+      shader.setMat4("model", model);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
