@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <ctime>
 #include <iostream>
-#include <string>
 #include <map>
+#include <string>
 // #include <thread>
 
 #include <glad/glad.h>
@@ -159,8 +159,8 @@ int main() {
   // configure global opengl state
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_CULL_FACE);
+  glFrontFace(GL_CW);
 
   // build and compile shaders
   // -------------------------
@@ -170,50 +170,50 @@ int main() {
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
   float cubeVertices[] = {
-      // positions          // texture Coords
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+      // Back face
+      0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // bottom-right
+      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
+      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // top-left
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+      // Front face
+      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
+      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // bottom-right
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // top-left
+      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // top-right
+      // Left face
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+      -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-left
+      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
+      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // top-right
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+                                       // Right face
+      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // top-right
+      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
+      0.5f, -0.5f, 0.5f, 0.0f, 0.0f,   // bottom-left
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,    // top-left
+      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,  // bottom-right
+      // Bottom face
+      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
+      0.5f, -0.5f, -0.5f, 1.0f, 1.0f,  // top-left
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,  // bottom-right
+      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,   // bottom-left
+      // Top face
+      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,  // top-right
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
+      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,   // bottom-right
+      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f   // bottom-left
+  };
   float planeVertices[] = {
-      // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
       5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
       -5.0f, -0.5f, 5.0f, 0.0f, 0.0f,
       -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
@@ -245,24 +245,12 @@ int main() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
-  // vegetation VAO
-  unsigned int vegetationVAO, vegetationVBO;
-  glGenVertexArrays(1, &vegetationVAO);
-  glGenBuffers(1, &vegetationVBO);
-  glBindVertexArray(vegetationVAO);
-  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-  glBindVertexArray(0);
 
   // load textures
   // -------------
   stbi_set_flip_vertically_on_load(true);
   unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg", GL_REPEAT);
   unsigned int floorTexture = loadTexture("resources/textures/metal.png", GL_REPEAT);
-  unsigned int vegetationTexture = loadTexture("resources/textures/blending_transparent_window.png", GL_CLAMP_TO_EDGE);
   // shader configuration
   // --------------------
   shader.use();
@@ -324,20 +312,6 @@ int main() {
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
     shader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    std::map<float, glm::vec3, std::greater<>> sorted;
-    for (unsigned int i = 0; i < windows.size(); i++) {
-      float distance = glm::length(camera.Position - windows[i]);
-      sorted[distance] = windows[i];
-    }
-    glBindVertexArray(vegetationVAO);
-    glBindTexture(GL_TEXTURE_2D, vegetationTexture);
-    for (auto& [_, w] : sorted) {
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, w);
-      shader.setMat4("model", model);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
