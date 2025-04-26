@@ -193,61 +193,56 @@ int main() {
   // configure global opengl state
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_PROGRAM_POINT_SIZE);
 
   // build and compile shaders
   // -------------------------
   Shader skyboxShader("shader.vert", "shader.frag");
-  Shader shader("shader.vs", "shader.fs");
-  Shader shader0("shader.vs", "shader0.fs");
-  Shader shader1("shader.vs", "shader1.fs");
-  Shader shader2("shader.vs", "shader2.fs");
+  Shader sceneShader("shader.vs", "shader.fs");
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
   float cubeVertices[] = {
-      // positions          // texture Coords
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+      0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+      0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+      0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+      -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+      0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+      0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+      0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+      -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+      -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+      -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+      0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+      0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+      0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+      0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+      0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+      0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+      0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+      0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-      0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
+      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+      0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+      0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+      0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+      -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+      -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f};
   float planeVertices[] = {
       5.0f, -0.5f, 5.0f, 2.0f, 0.0f,
       -5.0f, -0.5f, 5.0f, 0.0f, 0.0f,
@@ -264,9 +259,9 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
   // plane VAO
   unsigned int planeVAO, planeVBO;
@@ -276,9 +271,9 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
   glBindVertexArray(0);
 
   float skyboxVertices[] = {
@@ -335,31 +330,21 @@ int main() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glBindVertexArray(0);
 
-  // uniform buffer
-  unsigned int uniformBlockIndex = glGetUniformBlockIndex(shader.ID, "Matrices");
-  unsigned int uniformBlockIndex0 = glGetUniformBlockIndex(shader0.ID, "Matrices");
-  unsigned int uniformBlockIndex1 = glGetUniformBlockIndex(shader1.ID, "Matrices");
-  unsigned int uniformBlockIndex2 = glGetUniformBlockIndex(shader2.ID, "Matrices");
-
-  glUniformBlockBinding(shader.ID, uniformBlockIndex, 0);
-  glUniformBlockBinding(shader0.ID, uniformBlockIndex0, 0);
-  glUniformBlockBinding(shader1.ID, uniformBlockIndex1, 0);
-  glUniformBlockBinding(shader2.ID, uniformBlockIndex2, 0);
-
-  unsigned int uboMatrices;
-  glGenBuffers(1, &uboMatrices);
-
-  glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-  glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-  glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2*sizeof(glm::mat4));
-
   // load textures
   // -------------
   stbi_set_flip_vertically_on_load(true);
   unsigned int cubeTexture = loadTexture("resources/textures/container.jpg", GL_REPEAT);
   unsigned int floorTexture = loadTexture("resources/textures/metal.png", GL_REPEAT);
+
+  stbi_set_flip_vertically_on_load(false);
+  std::vector<std::string> faces{
+      "resources/textures/skybox/right.jpg",
+      "resources/textures/skybox/left.jpg",
+      "resources/textures/skybox/top.jpg",
+      "resources/textures/skybox/bottom.jpg",
+      "resources/textures/skybox/front.jpg",
+      "resources/textures/skybox/back.jpg"};
+  unsigned int cubeMap = loadCubemap(faces);
 
   // shader configuration
   // --------------------
@@ -383,64 +368,41 @@ int main() {
     // -----
     processInput(window);
 
-    // render
     // ------
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 model = glm::mat4(1.0f);
+    // set uniforms
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glm::mat4 model = glm::mat4(1.0f);
+    sceneShader.use();
+    sceneShader.setMat4("view", view);
+    sceneShader.setMat4("projection", projection);
+    sceneShader.setVec3("cameraPos", camera.Position);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 
+    // 1st. render pass, draw objects as normal, writing to the stencil buffer
+    // --------------------------------------------------------------------
     // cubes
-    shader.use();
     glBindVertexArray(cubeVAO);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    shader.setMat4("model", model);
+    sceneShader.setMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    sceneShader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    // cubes
-    shader0.use();
-    glBindVertexArray(cubeVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    model = glm::translate(model, glm::vec3(1.0f, 0.0f, -1.0f));
-    shader0.setMat4("model", model);
+    glDepthFunc(GL_LEQUAL);
+    skyboxShader.use();
+    glBindVertexArray(skyboxVAO);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
+    skyboxShader.setMat4("view", glm::mat4(glm::mat3(view)));
+    skyboxShader.setMat4("projection", projection);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    // cubes
-    shader1.use();
-    glBindVertexArray(cubeVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    model = glm::translate(model, glm::vec3(1.0f, 0.0f, 1.0f));
-    shader1.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    // cubes
-    shader2.use();
-    glBindVertexArray(cubeVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 1.0f));
-    shader2.setMat4("model", model);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-//    model = glm::mat4(1.0f);
-//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-//    shader.setMat4("model", model);
-//    glDrawArrays(GL_POINT, 0, 36);
-//    // floor
-//    glBindVertexArray(planeVAO);
-//    glBindTexture(GL_TEXTURE_2D, floorTexture);
-//    shader.setMat4("model", glm::mat4(1.0f));
-//    glDrawArrays(GL_TRIANGLES, 0, 6);
-//    glBindVertexArray(0);
+    glDepthFunc(GL_LESS);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
