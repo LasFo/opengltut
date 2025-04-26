@@ -13,11 +13,8 @@ cc_binary(
     data = [
         "shader.vs",
         "shader.fs",
-        "shaderSingleColor.frag",
-        "stencil.vert",
-        "container2.png",
-        "container2_specular.png",
-        "matrix.jpg",
+        "shader.frag",
+        "shader.vert",
     ] + glob(['resources/**']),
     linkopts = ["-lassimp"],
 )

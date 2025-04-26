@@ -20,6 +20,8 @@
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+unsigned int WIDTH = 1272;
+unsigned int HEIGHT = 2090;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -37,6 +39,8 @@ float diffuseStrength = 0.8f;
 bool stopLight = true;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    WIDTH = width;
+    HEIGHT = height;
   glViewport(0, 0, width, height);
 }
 
@@ -90,6 +94,10 @@ void processInput(GLFWwindow *window) {
     camera.ProcessKeyboard(LEFT, deltaTime);
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     camera.ProcessKeyboard(RIGHT, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    camera.ProcessKeyboard(UP, deltaTime);
+  if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS)
+    camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 unsigned int loadTexture(char const *path, GLint mode) {
@@ -159,13 +167,65 @@ int main() {
   // configure global opengl state
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_CULL_FACE);
-  glFrontFace(GL_CW);
 
   // build and compile shaders
   // -------------------------
-  Shader shader("shader.vs", "shader.fs");
-  Shader shaderSingleColor("stencil.vert", "shaderSingleColor.frag");
+  Shader shader("shader.vert", "shader.frag");
+  Shader sceneShader("shader.vs", "shader.fs");
+
+  unsigned int framebuffer;
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+  unsigned int textureColorbuffer;
+  glGenTextures(1, &textureColorbuffer);
+  glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    fprintf(stderr, "textureColorbuffer not complete\n");
+    return 0;
+  }
+
+  unsigned int rbo;
+  glGenRenderbuffers(1, &rbo);
+  glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+  glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    fprintf(stderr, "renderbuffer not complete\n");
+    return 0;
+  }
+
+  float quadVertices[] = {
+      // positions   // texCoords
+      -1.0f, 1.0f, 0.0f, 1.0f,
+      -1.0f, -1.0f, 0.0f, 0.0f,
+      1.0f, -1.0f, 1.0f, 0.0f,
+
+      -1.0f, 1.0f, 0.0f, 1.0f,
+      1.0f, -1.0f, 1.0f, 0.0f,
+      1.0f, 1.0f, 1.0f, 1.0f};
+  unsigned int quadVAO, quadVBO;
+  glGenVertexArrays(1, &quadVAO);
+  glGenBuffers(1, &quadVBO);
+  glBindVertexArray(quadVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+  glBindVertexArray(0);
+
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
@@ -249,7 +309,7 @@ int main() {
   // load textures
   // -------------
   stbi_set_flip_vertically_on_load(true);
-  unsigned int cubeTexture = loadTexture("resources/textures/marble.jpg", GL_REPEAT);
+  unsigned int cubeTexture = loadTexture("resources/textures/container.jpg", GL_REPEAT);
   unsigned int floorTexture = loadTexture("resources/textures/metal.png", GL_REPEAT);
   // shader configuration
   // --------------------
@@ -276,26 +336,25 @@ int main() {
     // -----
     processInput(window);
 
-    // render
+    // first pass: render scene to framebuffer
     // ------
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // don't forget to clear the stencil buffer!
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+
 
     // set uniforms
-    shaderSingleColor.use();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    shaderSingleColor.setMat4("view", view);
-    shaderSingleColor.setMat4("projection", projection);
-
-    shader.use();
-    shader.setMat4("view", view);
-    shader.setMat4("projection", projection);
+    sceneShader.use();
+    sceneShader.setMat4("view", view);
+    sceneShader.setMat4("projection", projection);
 
     glBindVertexArray(planeVAO);
     glBindTexture(GL_TEXTURE_2D, floorTexture);
-    shader.setMat4("model", glm::mat4(1.0f));
+    sceneShader.setMat4("model", glm::mat4(1.0f));
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
@@ -306,12 +365,31 @@ int main() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, cubeTexture);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    shader.setMat4("model", model);
+    sceneShader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    shader.setMat4("model", model);
+    sceneShader.setMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    // second pass: render texture to screne
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    shader.use();
+
+    glBindVertexArray(quadVAO);
+    glDisable(GL_DEPTH_TEST);
+    model = glm::mat4(1.0);
+    shader.setMat4("model", model);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    model = glm::mat4(1.0);
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+    shader.setMat4("model", model);
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
@@ -325,6 +403,7 @@ int main() {
   glDeleteVertexArrays(1, &planeVAO);
   glDeleteBuffers(1, &cubeVBO);
   glDeleteBuffers(1, &planeVBO);
+  glDeleteFramebuffers(1, &framebuffer);
 
   glfwTerminate();
   return 0;
