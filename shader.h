@@ -16,11 +16,15 @@ public:
   // the program ID
   unsigned int ID;
 
+  Shader(const char *vertexPath, const char *fragmentPath) : Shader(vertexPath, fragmentPath, nullptr) {
+  }
   // constructor reads and builds the shader
-  Shader(const char *vertexPath, const char *fragmentPath) : ID(0) {
+  Shader(const char *vertexPath, const char *fragmentPath, const char *geoPath) : ID(0) {
     // 1. retrieve the vertex/fragment source code from filePath
+
     std::string vertexCode;
     std::string fragmentCode;
+    std::string geometryCode;
     std::ifstream vShaderFile(vertexPath);
     if (!vShaderFile.good()) {
       fprintf(stderr, "vertex shader file '%s' does not exist\n", vertexPath);
@@ -31,11 +35,20 @@ public:
       fprintf(stderr, "fragment shader file '%s' does not exist\n", fragmentPath);
       return;
     }
+    std::ifstream gShaderFile(geoPath);
+    if (geoPath != nullptr && !gShaderFile.good()) {
+      fprintf(stderr, "geometry shader file '%s' does not exist\n", geoPath);
+      return;
+    }
+
     // ensure ifstream objects can throw exceptions:
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    if (geoPath != nullptr) {
+      gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    }
     try {
-      std::stringstream vShaderStream, fShaderStream;
+      std::stringstream vShaderStream, fShaderStream, geometryShader;
       // read file's buffer contents into streams
       vShaderStream << vShaderFile.rdbuf();
       fShaderStream << fShaderFile.rdbuf();
@@ -45,14 +58,20 @@ public:
       // convert stream into string
       vertexCode = vShaderStream.str();
       fragmentCode = fShaderStream.str();
+      if (geoPath != nullptr) {
+        geometryShader << gShaderFile.rdbuf();
+        gShaderFile.close();
+        geometryCode = geometryShader.str();
+      }
     } catch (std::ifstream::failure e) {
       std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
       return;
     }
     const char *vShaderCode = vertexCode.c_str();
     const char *fShaderCode = fragmentCode.c_str();
+    const char *gShaderCode = geometryCode.c_str();
     // 2. compile shaders
-    unsigned int vertex, fragment;
+    unsigned int vertex, fragment, geometry;
     int success;
     char infoLog[512];
 
@@ -76,14 +95,30 @@ public:
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
       glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-      fprintf(stderr, "failed to compile fragement shader: %s\n", infoLog);
+      fprintf(stderr, "failed to compile fragment shader: %s\n", infoLog);
       return;
     };
+
+    if (geoPath != nullptr) {
+      // geometry Shader
+      geometry = glCreateShader(GL_GEOMETRY_SHADER);
+      glShaderSource(geometry, 1, &gShaderCode, NULL);
+      glCompileShader(geometry);
+      // print compile errors if any
+      glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+      if (!success) {
+        glGetShaderInfoLog(geometry, 512, NULL, infoLog);
+        fprintf(stderr, "failed to compile geometry shader: %s\n", infoLog);
+        return;
+      };
+    }
 
     // shader Program
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
     glAttachShader(ID, fragment);
+    if (geoPath != nullptr)
+      glAttachShader(ID, geometry);
     glLinkProgram(ID);
     // print linking errors if any
     glGetProgramiv(ID, GL_LINK_STATUS, &success);
