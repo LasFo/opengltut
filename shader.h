@@ -150,10 +150,16 @@ public:
   void setMat4(const std::string &name, glm::mat4 value) const {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
   }
+  void setVec2(const std::string &name, float x, float y) const {
+    glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
+  }
+  void setVec2(const std::string &name, const glm::vec2 v) const {
+    glUniform2f(glGetUniformLocation(ID, name.c_str()), v.x, v.y);
+  }
   void setVec3(const std::string &name, float x, float y, float z) const {
     glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
   }
-  void setVec3(const std::string &name, glm::vec3 vec) const {
+  void setVec3(const std::string &name, const glm::vec3 vec) const {
     glUniform3f(glGetUniformLocation(ID, name.c_str()), vec.x, vec.y, vec.z);
   }
 

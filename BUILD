@@ -12,6 +12,7 @@ cc_binary(
     ],
     data = [
         "shader.vs",
+        "shader_instance.vs",
         "shader.fs",
         "shader.gs",
     ] + glob(['resources/**']),

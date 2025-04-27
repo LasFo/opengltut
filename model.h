@@ -24,15 +24,15 @@ public:
       m.Draw(shader);
   }
 
-private:
-  // model data
   std::vector<Texture> textures_loaded;
   std::vector<Mesh> meshes;
   std::string directory;
+private:
+  // model data
 
   void loadModel(const std::filesystem::path path) {
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *scene = import.ReadFile(path.c_str(), aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
       fprintf(stderr, "assimp::Importer::ReadFile failed: %s\n", import.GetErrorString());
