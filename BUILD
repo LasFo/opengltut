@@ -13,9 +13,9 @@ cc_binary(
     data = [
         "shader.vs",
         "shader.fs",
-        "shadow_shader.vs",
-        "shadow_shader.fs",
         "shader.gs",
+        "shader_light.vert",
+        "shader_light.frag",
     ] + glob(['resources/**']),
     linkopts = ["-lassimp"],
 )
