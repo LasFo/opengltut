@@ -330,11 +330,11 @@ int main() {
 
   float planeVertices[] = {
       // positions       // texcoords
-      5.0f, -3.0f, 5.0f, 1.0f, 1.0f,
-      -5.0f, -3.0f, 5.0f, 0.0f, 1.0f,
+      5.0f, 0.0f, 5.0f, 1.0f, 1.0f,
+      -5.0f, 0.0f, 5.0f, 0.0f, 1.0f,
       5.0f, 0.0f, -5.0f, 1.0f, 0.0f,
       5.0f, 0.0f, -5.0f, 1.0f, 0.0f,
-      -5.0f, -3.0f, 5.0f, 0.0f, 1.0f,
+      -5.0f, 0.0f, 5.0f, 0.0f, 1.0f,
       -5.0f, 0.0f, -5.0f, 0.0f, 0.0f};
   // plane VAO
   unsigned int planeVBO, planeVAO;
@@ -361,8 +361,9 @@ int main() {
 
   // load textures
   // -------------
-  unsigned int brickTexture = loadTexture("resources/textures/brickwall.jpg", GL_CLAMP_TO_EDGE);
-  unsigned int normalTexture = loadTexture("resources/textures/brickwall_normal.jpg", GL_CLAMP_TO_EDGE);
+  unsigned int brickTexture = loadTexture("resources/textures/bricks2.jpg", GL_CLAMP_TO_EDGE);
+  unsigned int normalTexture = loadTexture("resources/textures/bricks2_normal.jpg", GL_CLAMP_TO_EDGE);
+  unsigned int depthTexture = loadTexture("resources/textures/bricks2_disp.jpg", GL_CLAMP_TO_EDGE);
 
   // build and compile shaders
   // -------------------------
@@ -370,6 +371,8 @@ int main() {
   shader.use();
   shader.setInt("diffuseMap", 0);
   shader.setInt("normalMap", 1);
+  shader.setInt("depthMap", 2);
+  shader.setFloat("height_scale", 0.1f);
 
   glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
   shader.setVec3("lightPos", lightPos);
@@ -410,7 +413,6 @@ int main() {
     shader.setMat4("view", view);
     // render normal-mapped quad
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
     shader.setMat4("model", model);
     shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightPos", lightPos);
@@ -418,14 +420,16 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, brickTexture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, normalTexture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
 
     renderQuad();
 
-    lightShader.use();
-    lightShader.setMat4("projection", projection);
-    lightShader.setMat4("view", view);
-    glBindVertexArray(boxVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    lightShader.use();
+//    lightShader.setMat4("projection", projection);
+//    lightShader.setMat4("view", view);
+//    glBindVertexArray(boxVAO);
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
