@@ -9,6 +9,7 @@ cc_binary(
         "//third_party/stb:stb_img",
         "@glfw//:glfw",
         "@glm//:glm",
+        "@freetype//:freetype",
     ],
     data = [
         "shader.vs",
@@ -16,7 +17,7 @@ cc_binary(
         "shader.gs",
         "shader_light.vert",
         "shader_light.frag",
-    ] + glob(['resources/**']),
+    ] + glob(['resources/**', 'fonts/**']),
     linkopts = ["-lassimp"],
 )
 
